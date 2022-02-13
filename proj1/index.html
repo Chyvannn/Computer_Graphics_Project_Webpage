@@ -10,7 +10,8 @@
 	<ol>
 		<li>
 			<p><i>/* check if the sample point(px, py) is in the triangle */</i></p>
-			<p><i>bool inTri(float px, float py, float ax, float ay, float bx, float by, float cx, float cy) {...}</i></p>
+			<p><i>bool inTri(float px, float py, float ax, float ay, float bx, float by, float cx, float cy) {...}</i>
+			</p>
 		</li>
 		<li>
 			<p><i>/* check whether the point is inside or outside edge */</i></p>
@@ -28,21 +29,21 @@
 			We calculate the maximum and minimum value of x and y in the triangle to limit our iteration in a smaller
 			rectangular
 			<ul>
-				<li>max_x = (int) max({x0, x1, x2}) + 1;</li>
-				<li>max_y = (int) max({y0, y1, y2}) + 1;</li>
-				<li>min_x = (int) min({x0, x1, x2});</li>
-				<li>min_y = (int) min({y0, y1, y2});</li>
+				<li><i>max_x = (int) max({x0, x1, x2}) + 1;</i></li>
+				<li><i>max_y = (int) max({y0, y1, y2}) + 1;</i></li>
+				<li><i>min_x = (int) min({x0, x1, x2});</i></li>
+				<li><i>min_y = (int) min({y0, y1, y2});</i></li>
 				<li>We add 1 to the maximum value to ensure that all parts of the triangle are in the rectangle.</li>
 			</ul>
 		</li>
 		<li>We setup a nested for loop to iterate through each pixel from the top left corner to the bottom right
 			corner.</li>
-		<li>For each point `(x, y)`, we first get the central value of the pixel `(x+0.5, y+0.5)` and pass it to
-			`inTri().`
+		<li>For each point <i>(x, y)</i>, we first get the central value of the pixel <i>(x+0.5, y+0.5)</i> and pass it to
+			<i>inTri()</i>.
 		</li>
-		<li>`inTri()` takes three vertices of the triangle and the sample point as parameters, and calls `l()` for each
+		<li><i>inTri()</i> takes three vertices of the triangle and the sample point as parameters, and calls <i>l()</i> for each
 			edge of the triangle.</li>
-		<li>With three return values from `l()`, `inTri()` check if all of them have the same sign, which resolve the
+		<li>With three return values from <i>l()</i>, <i>inTri()</i> check if all of them have the same sign, which resolve the
 			issue of the direction of normals.</li>
 	</ol>
 	</p>
@@ -56,17 +57,28 @@
 					We set a condition to step out of the inner loop once we cross the bottom edge of the triangle.
 				</li>
 				<li>
-					We initialize a flag `bool y_flag = false` in the outer loop. Once we enter the triangle, set flag
+					We initialize a flag <i>bool y_flag = false</i> in the outer loop. Once we enter the triangle, set flag
 					to be true.
 				</li>
 				<li>
-					During the inner loop, if we find that the `y_flag` change from `true` to `false`, we break the
+					During the inner loop, if we find that the <i>y_flag</i> change from <i>true</i> to <i>false</i>, we break the
 					loop.
 				</li>
 			</ol>
 		</li>
-		<li>Timing Comparison Table</li>
+		<li>
+			<p>Timing Comparison Table</p>
+			<img src="./images/time_comp.png" alt="Time Comparison Table">
+		</li>
 	</ul>
+	<h3>Sample Output</h3>
+	<ul>
+		<li>The pixel inspector is centered on the upper vertex of the purple triangle. The triangle is discontinuous at
+			this point.</li>
+	</ul>
+	<img src="./images/task1_t4.png" alt="Task 1 Test 4" width='700' height='500'>
+
+	<h2>Task 2: Antialiasing by Supersampling</h2>
 </body>
 
 </html>
