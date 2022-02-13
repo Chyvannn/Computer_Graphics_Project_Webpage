@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -10,8 +11,7 @@
 	<ol>
 		<li>
 			<p><i>/* check if the sample point(px, py) is in the triangle */</i></p>
-			<p><i>bool inTri(float px, float py, float ax, float ay, float bx, float by, float cx, float cy) {...}</i>
-			</p>
+			<p><i>bool inTri(float px, float py, float ax, float ay, float bx, float by, float cx, float cy) {...}</i></p>
 		</li>
 		<li>
 			<p><i>/* check whether the point is inside or outside edge */</i></p>
@@ -22,8 +22,7 @@
 			<p><i>int normalize_l(float f) {...}</i></p>
 		</li>
 	</ol>
-	<h3>Algorithms</h3>
-	<p>
+	<h3>Algorithms Workthrough</h3>
 	<ol>
 		<li>
 			We calculate the maximum and minimum value of x and y in the triangle to limit our iteration in a smaller
@@ -34,19 +33,29 @@
 				<li><i>min_x = (int) min({x0, x1, x2});</i></li>
 				<li><i>min_y = (int) min({y0, y1, y2});</i></li>
 				<li>We add 1 to the maximum value to ensure that all parts of the triangle are in the rectangle.</li>
+				<li>
+					Since we only test the points within the rectangular space, this algorithms is no worse than the one
+					that check each sample within the bounding box.
+				</li>
 			</ul>
 		</li>
-		<li>We setup a nested for loop to iterate through each pixel from the top left corner to the bottom right
-			corner.</li>
-		<li>For each point <i>(x, y)</i>, we first get the central value of the pixel <i>(x+0.5, y+0.5)</i> and pass it to
-			<i>inTri()</i>.
+		<li>
+			We setup a nested for loop to iterate through each pixel from the top left corner to the bottom right
+			corner.
 		</li>
-		<li><i>inTri()</i> takes three vertices of the triangle and the sample point as parameters, and calls <i>l()</i> for each
-			edge of the triangle.</li>
-		<li>With three return values from <i>l()</i>, <i>inTri()</i> check if all of them have the same sign, which resolve the
-			issue of the direction of normals.</li>
+		<li>
+			For each point <i>(x, y)</i>, we first get the central value of the pixel <i>(x+0.5, y+0.5)</i> and pass it
+			to <i>inTri()</i>.
+		</li>
+		<li>
+			<i>inTri()</i> takes three vertices of the triangle and the sample point as parameters, and calls <i>l()</i>
+			for each edge of the triangle.
+		</li>
+		<li>
+			With three return values from <i>l()</i>, <i>inTri()</i> check if all of them have the same sign, which
+			resolve the issue of the direction of normals.
+		</li>
 	</ol>
-	</p>
 	<h3>Optimization for Extra Credit</h3>
 	<ul>
 		<li>
@@ -57,12 +66,12 @@
 					We set a condition to step out of the inner loop once we cross the bottom edge of the triangle.
 				</li>
 				<li>
-					We initialize a flag <i>bool y_flag = false</i> in the outer loop. Once we enter the triangle, set flag
-					to be true.
+					We initialize a flag <i>bool y_flag = false</i> in the outer loop. Once we enter the triangle, set
+					flag to be true.
 				</li>
 				<li>
-					During the inner loop, if we find that the <i>y_flag</i> change from <i>true</i> to <i>false</i>, we break the
-					loop.
+					During the inner loop, if we find that the <i>y_flag</i> change from <i>true</i> to <i>false</i>, we
+					break the loop.
 				</li>
 			</ol>
 		</li>
@@ -73,12 +82,108 @@
 	</ul>
 	<h3>Sample Output</h3>
 	<ul>
-		<li>The pixel inspector is centered on the upper vertex of the purple triangle. The triangle is discontinuous at
-			this point.</li>
+		<li>
+			The pixel inspector is centered on the upper vertex of the purple triangle. The triangle is discontinuous at
+			this point.
+		</li>
 	</ul>
-	<img src="./images/task1_t4.png" alt="Task 1 Test 4" width='700' height='500'>
+	<img src="./images/task1_t4.png" alt="Task 1 Test 4" width="700" height="500">
 
 	<h2>Task 2: Antialiasing by Supersampling</h2>
+	<h3>Algorithms Workthrough</h3>
+	<ul>
+		<li>
+			In <i>RasterizerImp::rasterize_triangle()</i>
+			<ol>
+				<li>
+					Similar to what we did for task 1, we first get the max and min value of x and y to setup a loop
+					from upper left corner to bottom right corner of the bounding box.
+				</li>
+				<li>
+					Using the sample_rate initialized in RasterizerImp, we calculate the number of samples per edge
+					<i>int r = (int) sqrt(this->sample_rate);</i>.
+				</li>
+				<li>
+					In addition to the nested for loop from task 1, we add another two nested loops to iterate through
+					subparts of each pixel. We call <i>inTri()</i> for each sample point similar to task 1.
+				</li>
+				<li>
+					One thing to note is that since we are evaluating the subpart of each pixel, the x, y value for the
+					sample point change to <i>(x+(i+0.5)/r, y+(j+0.5)/r)</i>. Here, i is the sampling position on the
+					x-coordinate, j is the sampling position on the y-coordinate. The following image shows the relations 
+					between x, y and i, j when the sample rate is 4.
+				</li>
+				<img src="images/supersampling_example.png" width="400" height="400">
+				<li>
+					Instead of rasterize the sample point directly, we add it to the sample_buffer at index of <i>y * width
+					+ x * this->sample_rate + i * r + j</i>.
+				</li>
+				<li>
+					<i>y * width + x</i> locates the pixel we are supersampling, and <i>i * r + j</i> locates the sample
+					point within the pixel.
+				</li>
+			</ol>
+		</li>
+		<li>
+			In <i>RasterizerImp::set_sample_rate()</i>:
+			<ol>
+				<li>We change the first parameter of <i>resize()</i> from <i>width * height</i> to <i>width * height *rate</i>.</li>
+				<li>We add a call to clear_buffer() to clear the sample buffer after resize.</li>
+			</ol>
+		</li>
+		<li>
+			In <i>RasterizerImp::set_framebuffer_target()</i>:
+			<ol>
+				<li>We change the first parameter of <i>resize()</i> to <i>width * height * rate</i> as well.</li>
+			</ol>
+		</li>
+		<li>
+			In <i>RasterizerImp::fill_pixel()</i>:
+			<ol>
+				<li>Since we are supersampling a higher resolution image first, the index for the pixel to fill in sample_buffer becomes a
+				sample point. The index changes to <i>(y * width + x) * this->sample_rate + i</i>, and we need to loop sample_rate times
+				to fill the entire pixel with color c.</li>
+			</ol>
+		</li>
+		<li>
+			In <i>RasterizerImp::resolve_to_framebuffer()</i>:
+			<ol>
+				<li>For each pixel point, we create a <i>temp_color[]</i> array to store the floating RGB values. We then iterate over each sample point within the current pixel to obtain the net RGB value for that pixel.</li>
+				<li>Note that the index of the current sample point is <i>(y * width + x) * this->sample_rate + i</i> where i is the value from 0 to <i>this->sample_rate</i>.</li>
+				<li>We average the RGB net values to obtain the color of the pixel after supersampling.</li>
+				<li>Finally, similar to the original code in this function, we call <i>rgb_framebuffer_target()</i> to render the frame.</li>
+			</ol>
+		</li>
+		<li>
+			<p>Different from the original rasterizer pipeline, we first supersampling the image by simple_rate and before eventually
+			populating the pixel, we will downsampling the pixel and take the average of the pixel color.</p>
+		</li>
+	</ul>
+	<h3>Sample Output</h3>
+	<ol>
+		<li>
+			<p>Supersample rate 1 per pixel, inspector at upper corner of the purple triangle.</p>
+			<img src = "images/task2_sample_rate1.png" width="700" height = "500">
+		</li>
+		<li>
+			<p>Supersample rate 4 per pixel, inspector at upper corner of the purple triangle.</p>
+			<img src="images/task2_sample_rate4.png" width="700" height="500">
+		</li>
+		<li>
+			<p>Supersample rate 16 per pixel, inspector at upper corner of the purple triangle.</p>
+			<img src="images/task2_sample_rate16.png" width="700" height="500">
+		</li>
+		<li>As supersampling rate increate, we are sampling finer in each pixel. At the upper side of the triangle, since the corner
+		is extremely skinny, less sample points are categorized as be in the triangle. Thus, the color value of that corner is
+		getting lighter after averaging over the whole pixel. Moreover, as we approaching the corner vertex, higher sampling
+		rate will result in lighter color.</li>
+	</ol>
+	<h3>Extra Credit</h3>
+	<ol>
+		<li>xxxxxxxxxxxxxxxxxxxxxxxxxxxx</li>
+		<li>xxxxxxxxxxxxxx</li>
+		<li>xxxxxxx</li>
+	</ol>
 </body>
 
 </html>
