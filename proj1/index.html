@@ -35,7 +35,7 @@
 			<p><i>float l(float px, float py, float p0x, float p0y, float p1x, float p1y) {...}</i></p>
 		</li>
 		<li>
-			<p><i>/* normalize the floating point to compare with 0 */</i></p>
+			<p><i>/* normalize the number to resolve the precision issue of floating-point numbers during comparison */</i></p>
 			<p><i>int normalize_l(float f) {...}</i></p>
 		</li>
 	</ol>
@@ -69,8 +69,9 @@
 			for each edge of the triangle.
 		</li>
 		<li>
-			With three return values from <i>l()</i>, <i>inTri()</i> check if all of them have the same sign, which
-			resolve the issue of the direction of normals.
+			With three return values from <i>l()</i>, we first normalize them to resolve the percision issue when comparing
+			with 0 by calling <i>normalize_l()</i>, <i>inTri()</i> check if all of them have the same sign, which eliminate
+			the issue caused by winding order of the vertices.
 		</li>
 	</ol>
 	<h3>Optimization for Extra Credit</h3>
