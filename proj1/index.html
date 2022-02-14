@@ -241,9 +241,72 @@
 	<h3>Test 7 Output</h3>
 	<img src="./images/task4_test7.png" alt="task 4, test 7" width="700" height="500">
 
+	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Task 5: "Pixel sampling" for texture mapping</h2>
+	<h3>Texture Mapping</h3>
+	<ol>
+		<li>
+			Pixel sampling uses the information we now have about the surrounding pixels to get texture information for the new
+			pixels. When we zoom in on the image, the original texture is spread out over a larger area. Therefore, we need to map
+			through the original texture to the additional pixel points.
+		</li>
+		<li>
+			Nearest Neighbor: by comparing the distance between the current pixel and 4 surrounding pixels, we assign the texture
+			information of the nearest pixel to the current pixel.
+		</li>
+		<li>
+			Bilinear Sampling: different from nearest neighbor, bilinear sampling combines the texture information of four pixel points
+			around the sampling pixel proportionally.
+		</li>
+		<li>
+			The most significant difference between nearest neighbor and bilinear sampling is that nearest neighbor only takes the value
+			of one existing pixel while bilinear sampling combines four pixels and make the sampling process more smooth.
+		</li>
+	</ol>
+	<h3>Test Outputs</h3>
+	<div align="middle">
+		<table style="width: 100%">
+			<tr>
+				<td>
+					<img src="./images/nearest_1.png" align="middle" width="500px" />
+					<figcaption align="middle">Nearest Neighbor with 1 sample/pixel</figcaption>
+				</td>
+				<td>
+					<img src="./images/nearest_16.png" align="middle" width="500px" />
+					<figcaption align="middle">Nearest Neighbor with 16 samples/pixel</figcaption>
+				</td>
+			</tr>
+			<br>
+			<tr>
+				<td>
+					<img src="./images/bilinear_1.png" align="middle" width="500px" />
+					<figcaption align="middle">Bilinear sampling with 1 sample/pixel</figcaption>
+				</td>
+				<td>
+					<img src="./images/bilinear_16.png" align="middle" width="500px" />
+					<figcaption align="middle">Bilinear sampling with 16 samples/pixel</figcaption>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<h3>Comment on the Output</h3>
+	<ul>
+		<li>
+			The result shows that using bilinear sampling with 16 samples per pixel will have the most great image and the one that
+			using nearest neighbor with 1 sample per pixel will have the most aliased image.
+		</li>
+		<li>
+			Comparing supersampling image with bilinear sampling image, we can see that supersampling can have a better overall affects
+			in anti-aliasing. However, due to the high cost of supersampling, bilinear sampling can also be a great choice in most cases.
+		</li>
+		<li>
+			There will be a large difference between these two methods if the image we rendering have hight frequency. In this case, the
+			nearest neighbor may not be able to capture as much details as bilinear sampling and may be easiler to be effected by redundant
+			texture information.
+		</li>
+	</ul>
 
 
-	
+
 	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">GitHub Page Link</h2>
 	<p align="middle" style="font-size: 150%;">
 		<a href="https://cal-cs184-student.github.io/sp22-project-webpages-Chyvannn/">
