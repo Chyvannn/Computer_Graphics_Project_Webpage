@@ -26,6 +26,7 @@
 	<h2 align="middle">Yifan Zhong, Yicheng Sun, CS184-Spring 2022</h2>
 
 	<br><br>
+	
 	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Overview</h2>
 	<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share
 		your thoughts on what interesting things you've learned from completing the project.</p>
@@ -112,7 +113,7 @@
 			this point.
 		</li>
 	</ul>
-	<img src="./images/task1_4.png" alt="Task 1 Test 4" width="700" height="500">
+	<img src="./images/task1_t4.png" alt="Task 1 Test 4" width="700" height="500">
 
 	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Task 2: Antialiasing by Supersampling</h2>
 	<h3>Algorithms Workthrough</h3>
@@ -138,7 +139,7 @@
 					x-coordinate, j is the sampling position on the y-coordinate. The following image shows the relations 
 					between x, y and i, j when the sample rate is 4.
 				</li>
-				<img src="images/supersampling_example.png" width="400" height="400">
+				<img src="./images/supersampling_example.png" width="400" height="400">
 				<li>
 					Instead of rasterize the sample point directly, we add it to the sample_buffer at index of <i>y * width
 					+ x * this->sample_rate + i * r + j</i>.
@@ -197,14 +198,14 @@
 					<figcaption align="middle">Supersample rate: 1</figcaption>
 				</td>
 				<td>
-					<img src="images/task2_sample_rate4.png" align="middle" width="500px" />
+					<img src="./images/task2_sample_rate4.png" align="middle" width="500px" />
 					<figcaption align="middle">Supersample rate: 4</figcaption>
 				</td>
 			</tr>
 			<br>
 			<tr>
 				<td>
-					<img src="images/task2_sample_rate16.png" align="middle" width="500px" />
+					<img src="./images/task2_sample_rate16.png" align="middle" width="500px" />
 					<figcaption align="middle">Supersample rate: 16</figcaption>
 				</td>
 			</tr>
