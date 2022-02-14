@@ -17,13 +17,20 @@
 </style>
 <title>CS 184 Rasterizer</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<meta name="author" content="Yifan Zhong, Yichen Sun">
 <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
 </head>
 
 <body>
-	<h1>Project 01 Writeup</h1>
-	<h2>Task 1: Drawing Single-Color Triangles</h2>
+	<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2018</h1>
+	<h1 align="middle">Project 1: Rasterizer</h1>
+	<h2 align="middle">Yifan Zhong, Yicheng Sun, CS184-Spring 2022</h2>
+
+	<br><br>
+	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Overview</h2>
+	<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share
+		your thoughts on what interesting things you've learned from completing the project.</p>
+	
+	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Task 1: Drawing Single-Color Triangles</h2>
 	<h3>Helper Functions</h3>
 	<ol>
 		<li>
@@ -105,9 +112,9 @@
 			this point.
 		</li>
 	</ul>
-	<img src="./images/task1_t4.png" alt="Task 1 Test 4" width="700" height="500">
+	<img src="./images/task1_4.png" alt="Task 1 Test 4" width="700" height="500">
 
-	<h2>Task 2: Antialiasing by Supersampling</h2>
+	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Task 2: Antialiasing by Supersampling</h2>
 	<h3>Algorithms Workthrough</h3>
 	<ul>
 		<li>
@@ -178,23 +185,45 @@
 		</li>
 	</ul>
 	<h3>Sample Output</h3>
+	<p>As supersampling rate increate, we are sampling finer in each pixel. At the upper side of the triangle, since the corner
+	is extremely skinny, less sample points are categorized as be in the triangle. Thus, the color value of that corner is
+	getting lighter after averaging over the whole pixel. Moreover, as we approaching the corner vertex, higher sampling
+	rate will result in lighter color.</p>
+	<div align="middle">
+		<table style="width: 100%">
+			<tr>
+				<td>
+					<img src="./images/task2_sample_rate1.png" align="middle" width="500px" />
+					<figcaption align="middle">Supersample rate: 1</figcaption>
+				</td>
+				<td>
+					<img src="images/task2_sample_rate4.png" align="middle" width="500px" />
+					<figcaption align="middle">Supersample rate: 4</figcaption>
+				</td>
+			</tr>
+			<br>
+			<tr>
+				<td>
+					<img src="images/task2_sample_rate16.png" align="middle" width="500px" />
+					<figcaption align="middle">Supersample rate: 16</figcaption>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<h3>Extra Credit</h3>
 	<ol>
-		<li>
-			<p>Supersample rate 1 per pixel, inspector at upper corner of the purple triangle.</p>
-			<img src = "images/task2_sample_rate1.png" width="700" height = "500">
-		</li>
-		<li>
-			<p>Supersample rate 4 per pixel, inspector at upper corner of the purple triangle.</p>
-			<img src="images/task2_sample_rate4.png" width="700" height="500">
-		</li>
-		<li>
-			<p>Supersample rate 16 per pixel, inspector at upper corner of the purple triangle.</p>
-			<img src="images/task2_sample_rate16.png" width="700" height="500">
-		</li>
-		<li>As supersampling rate increate, we are sampling finer in each pixel. At the upper side of the triangle, since the corner
-		is extremely skinny, less sample points are categorized as be in the triangle. Thus, the color value of that corner is
-		getting lighter after averaging over the whole pixel. Moreover, as we approaching the corner vertex, higher sampling
-		rate will result in lighter color.</li>
+		<li>xxxxxxxxxxxxxxxxxxxxxxxxxxxx</li>
+		<li>xxxxxxxxxxxxxx</li>
+		<li>xxxxxxx</li>
+	</ol>
+	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Task 3: Transforms</h2>
+	<h3>Cubeman</h3>
+	<ol>
+		<li>We apply rotation and transition to each part of the cubeman respectively to make it look like he was jumping.</li>
+		<li>We also changed the color of his head to blue and half of his arms and legs to skin color to make it look like he is
+		wearing short sleeves and shorts.</li>
+		<li>Finally we apply scale to the whole robot to make it bigger.</li>
+		<img src="./images/cubeman.png" alt="cubeman" width="500" height="500">
 	</ol>
 	<h3>Extra Credit</h3>
 	<ol>
@@ -202,6 +231,7 @@
 		<li>xxxxxxxxxxxxxx</li>
 		<li>xxxxxxx</li>
 	</ol>
+	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Task 4: Barycentric coordinates</h2>
 </body>
 
 </html>
