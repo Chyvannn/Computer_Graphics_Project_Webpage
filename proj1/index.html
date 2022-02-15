@@ -28,8 +28,15 @@
 	<br><br>
 	
 	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Overview</h2>
-	<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share
-		your thoughts on what interesting things you've learned from completing the project.</p>
+	<p align="middle">
+		In this project, we built a rasterizer which can be used to render an image with diffent rasterizing techniques. We
+		first implement the algorithms to asterizing an image and speed it up in task 1. We then focus on making the image more
+		clear using supersampling in task 2. In task 3, we shift the gear to change out focus onto simple transforms including
+		rotating, scaling, and transiting. We then applied the concept of barycentric coordinates to achieve the gradient of
+		colors in task 4. We then further implement nearest neighbor and bilinear sampling to make the renderized image better.
+		Finally, in task 6, we implement level sampling to sample at different mipmap levels. To sum up, the rasterizer we built
+		equipped with different ways to get a better quality image.
+	</p>
 	
 	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Task 1: Drawing Single-Color Triangles</h2>
 	<h3>Helper Functions</h3>
@@ -308,8 +315,69 @@
 			texture information.
 		</li>
 	</ul>
-
-
+	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">Task 6: "Level sampling" with mipmaps for texture mapping</h2>
+	<h3>Level Sampling</h3>
+	<ul>
+		<li>
+			To map our image from the screen space to the texture space, some part of the image will be concentrated while other
+			parts maybe less compacted. In this case, some part of the image may have the resolution higher than necessary while
+			other parts may use lower sample rate. To get the texture of different resolution, we store them in a mipmap. Whenever
+			we wand an image with higher resolution, we can choose a higher level mipmap image. If we need a lower resolution image,
+			we can use a lower level mipmap image. Thus, the overall resolution of the image can be changed dynamically base on the
+			current texture.
+		</li>
+		<li>
+			<p>
+				To implement level mapping, we first want to implement get_level() function. In this case, we can make use of the
+				barycentric coordinates method we implemented in task 5. After getting (u, v), we calculate the value of (du/dx,
+				dv/dx) and (du/dy, dv/dy). With these values, we can perform the process in slides showed as below.
+			</p>
+			<img src="./images/text_map_into.png" align="middle" width="800px" height = "600px">
+		</li>
+	</ul>
+	<h3>Test Output></h3>
+	<div align="middle">
+		<table style="width: 100%">
+			<tr>
+				<td>
+					<img src="./images/l_z_p_n.png" align="middle" width="500px" />
+					<figcaption align="middle">Zero Level + Nearst Sampling</figcaption>
+				</td>
+				<td>
+					<img src="./images/l_z_p_l.png" align="middle" width="500px" />
+					<figcaption align="middle">Zero Level + Bilinear Sampling</figcaption>
+				</td>
+			</tr>
+			<br>
+			<tr>
+				<td>
+					<img src="./images/l_n_p_n.png" align="middle" width="500px" />
+					<figcaption align="middle">Nearest Level + Nearst Sampling</figcaption>
+				</td>
+				<td>
+					<img src="./images/l_n_p_l.png" align="middle" width="500px" />
+					<figcaption align="middle">Nearest Level + Bilinear Sampling</figcaption>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<ul>
+		<li>
+			In these sampling patterns, supersampling is the one that requires a lot more memory than others. With the inceasing of
+			sample rate, we will need to also increase the memory used to save the pixel information with the same factor.
+		</li>
+		<li>
+			On the other hand, level sampling will requires more time to process due to multiple levels in the mipmap to be
+			considered and combined.
+		</li>
+		<li>Here, nearest sampling can be one of the cheapest in terms of both memory and time, but its image quality will also reduece significantly.</li>
+		<li>For binear sampling, since we only need to consider 4 more points for each pixel, the time we used my increase slightly by a constant factor.</li>
+		<li>
+			To choose between these techniques, if we would like to have a higher image quality regardless of the time and
+			memory cost, we should choose supersampling with high sample rate. Moreover, we should use bilinear sampling over
+			nearest sampling along with level sampling.
+		</li>
+	</ul>
 
 	<h2 align="middle" style="background-color: azure; height: 40px; padding-top: 1%;">GitHub Page Link</h2>
 	<p align="middle" style="font-size: 150%;">
