@@ -27,47 +27,89 @@
 
 	<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2020</h1>
 	<h1 align="middle">Project 2: Mesh Editor</h1>
-	<h2 align="middle">YOUR NAME, CS184-??</h2>
+	<h2 align="middle">Yifan Zhong, Yicheng Sun, CS184-Spring 2022</h2>
 
-	<br><br>
+	<br>
 
 	<div>
-
 		<h2 align="middle">Overview</h2>
-		<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole.
-			Share your thoughts on what interesting things you've learned from completing the project.</p>
-
+		<p>
+			In this assignment, we implement the algorithms that can be used in geometric modeling. Starting from the Bezier curve
+			using de Casteljau’s algorithm in 2D space, we extend it into 3D space to implement Bezier surface. Then, building upon
+			these ideas, in order to smoothen the flat shading showed in our blender implementation, we add support to the
+			area-weighted normal vectors. To have a better control over the triangle mesh, we implement edge flip and edge split in
+			our blender. These methods are built upon the half-edge data structure in which every edge except the boundary will have
+			its twin in their neighbor triangle, and each each is combined with two half-edges. Furthermore, with the edge flip and
+			split, we will be able to implement mesh upsampling using loop subdivision to subdivide the triangles, insert new mesh
+			elements, and update old elements based on weighting scheme.
+		</p>
+		<p>
+			During the implementation, we were impressed by the process of deriving Bezier curve and the usage of half-edge data
+			structure. They provided a great way to interpret geometrical models. We also enjoy the last part of the project in
+			implementing loop subdivision. We see how a cube can be gradually changed into a ball-like shape. In summary, this
+			project gave us insight on how a blender work.
+		</p>
 		<h2 align="middle">Section I: Bezier Curves and Surfaces</h2>
 
 		<h3 align="middle">Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
 
-		<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is
-			a
-			column in that row. You might find this useful for framing and showing your result images in an organized
-			fashion.
+		<p>
+			Casteljau's algorithm is used to draw a Bezier curve starting from the points provided. We split the line of every
+			two points using the given ratio t. We insert new points at the split and use these newly added splitting points as new
+			starting points and call Casteljau's algorithm again. The algorithm will stop when only one point remains. The
+			trajectory of this point as t changes from 0 to 1 is a Bezier curve.
 		</p>
-
+		<p>
+			Implementation: Since evaluateStep(...) only call one layer of the Casteljau's algorithm, we just need to iterate
+			through the points and using vector-scalar calculation to get a new point. The general equation is new_point = t *
+			point_1 + (1 - t) * point_2. Since the initial points are provided as a C++ vector and the result will also be a
+			vector, we will each new points to a new_points vector and use this vector to enter a new Casteljau's algorithm.
+		</p>
+		<p>
+			Here are 6 points we add to generate the new bezier curve: (0.10, 0.10), (0.10, 0.50), (0.50, 0.70), (0.70, 0.45),
+			(0.20, 0.20), (0.50, 0.50). The images below are each step during evaluation along with a gif of mmodified points
+			with changing t.
+		</p>
 		<div align="middle">
 			<table style="width: 100%">
 				<tr>
 					<td>
-						<img src="images/image1.png" align="middle" width="400px" />
-						<figcaption align="middle">Caption goes here.</figcaption>
+						<img src="./images/task1_level0.png" align="middle" width="500px" />
+						<figcaption align="middle">Step 0</figcaption>
 					</td>
 					<td>
-						<img src="images/image2.png" align="middle" width="400px" />
-						<figcaption align="middle">Caption goes here.</figcaption>
+						<img src="images/task1_level1.png" align="middle" width="500px" />
+						<figcaption align="middle">Step 1</figcaption>
 					</td>
 				</tr>
-				<br>
 				<tr>
 					<td>
-						<img src="images/image3.png" align="middle" width="400px" />
-						<figcaption align="middle">Caption goes here.</figcaption>
+						<img src="images/task1_level2.png" align="middle" width="500px" />
+						<figcaption align="middle">Step 2</figcaption>
 					</td>
 					<td>
-						<img src="images/image4.png" align="middle" width="400px" />
-						<figcaption align="middle">Caption goes here.</figcaption>
+						<img src="images/task1_level3.png" align="middle" width="500px" />
+						<figcaption align="middle">Step 3</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<img src="images/task1_level4.png" align="middle" width="500px" />
+						<figcaption align="middle">Step 4</figcaption>
+					</td>
+					<td>
+						<img src="images/task1_level5.png" align="middle" width="500px" />
+						<figcaption align="middle">Step 5</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<img src="images/task1_level6.png" align="middle" width="500px" />
+						<figcaption align="middle">Final Curve</figcaption>
+					</td>
+					<td>
+						<img src="images/task1_t.gif" align="middle" width="500px" />
+						<figcaption align="middle">Curve with changing t</figcaption>
 					</td>
 				</tr>
 			</table>
@@ -76,28 +118,295 @@
 
 		<h3 align="middle">Part 2: Bezier surfaces with separable 1D de Casteljau subdivision</h3>
 
-
+		<p>
+			The de Casteljau algorithm extended to Bezier surface can be broke into two parts. With a 2D vector is points, we
+			evaluate each row of the vector to get a Bezier curve for the current row. If a NxN 2D vector is given, after the
+			first step, we will be able to get n Bezier curves. Then, we will use the final point we insert in for each Bezier curve
+			to evaluate a new Bezier curve cross all n Bezier curves we evaluate in the previous step. The surface swept by this
+			line is the Bezier surface we evaluate from these NxN points.
+		</p>
+		<p>
+			For the actual implementation, we use break these steps into three functions. evaluateStep() is slightly different
+			from the one we built in task 1. Since we are evaluating a surface, the points are Vector3D. This function will
+			evaluate one step of the de Casteljau algorithm and output the points for next step. evaluate1D() is a function that
+			recursively call evaluateStep(). It will take one row of the NxN vector and directly return the final point
+			calculated from de Casteljau's algorithm. evaluate() takes in the t-values we will used in de Casteljau's algorithm on
+			x and y direction and a `NxN` vector. It first call evaluate1D() on each row and use the results to call
+			evaluate1D() again to get the final surface.
+		</p>
+		<p>Here is the teapot we get after this part.</p>
+		<img src="images/task2_teapot.png" align="middle" width="1000px" />
 
 		<h2 align="middle">Section II: Sampling</h2>
 
 		<h3 align="middle">Part 3: Average normals for half-edge meshes</h3>
+		<p>
+			To calculate the area weighted normal, we first want to iterate through the triangles around the current vertex.
+			Thus, we use the do{...}while(h != h->twin()->next); iteration method provided in doc to iterate through half-edges from
+			the vertex.	
+		</p>
+		<p>
+			One thing to not is that we also need to check if the face is a boundary.The function to calculate norm is provided in
+			face class. To calculate the area of the triangle, we can use the dot product of two sides of the triangle. Then our
+			task focus on getting the vectors of two sides. We use first half edge to get two vertex position of a triangle, since
+			the vertex here is a iterator, we can simple use Vector3D vertex1 = v->position to get the first vertex position, and
+			after v++, use the same line to get the second vertex position.
+			Then, we switch to the next half-edge and get the last vertex, vertex3. At this point, we get all the vertex position
+			for a neighbor triangle.
+			After applying dot product on vertex3 - vertex2 and vertex1 - vertex2, we will be able to get the area of the neighbor
+			triangle. After iterating through all the neighbor triangle and add norm * area, we divide the total weighted norm by
+			the degree of the vertex to get the averaged weighted normal of the vertex.
+		</p>
+		<div align="middle">
+			<table style="width: 100%">
+				<tr>
+					<td>
+						<img src="./images/task3_flat.png" align="middle" width="500px" />
+						<figcaption align="middle">Flat Shading Image</figcaption>
+					</td>
+					<td>
+						<img src="images/task3_phong.png" align="middle" width="500px" />
+						<figcaption align="middle">Phong Shading Image</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
 
 
 		<h3 align="middle">Part 4: Half-edge flip</h3>
-
+		<p>
+			We first try to do a flipping only on that edge without modifying other mesh element, but it eventually failed. After
+			referring back to project spec and lecture slides, we decided to follow the instruction to save relevant mesh elements
+			first before flipping. We then get all the half-edge of two triangles, namely abc and cbd, that involved in flipping,
+			change the half edge vertex b in abc is pointing to from bc to bd, and change c in cbd is pointing to from cb to ca.
+			Then, we start set neighbors for the flipped triangles, changing them from abc and cbd to adc and dab. During this
+			process, we will treat the middle edge e0 as bc and cb but they actually refers to the new edge ad and da.
+		</p>
+		<p>
+			One bug we encountered during the implementation is that the half edge iterator we get from face by calling halfedge()
+			were not always keep consistent. Thus, we will need to explicitly specify the half-edge each face is pointing before
+			using them in setNeighbors(). The issue of halfedge() let us dig holes after pressing f. We will be able to see the mesh
+			structure on the other side of the teapot through this hole. Determining the arguments passed into setNeighbors() is
+			also a tricky part during the implementation. With wrong arguments, we will sometimes get a triangle hole or maybe a
+			quadrangle hole after flip an edge.
+		</p>
+		<p>
+			To help us debug the flip function, we draw out the flipping triangles and label each edge to help visualize the
+			changes. We tried to print out a HalfEdgeIterator, but lack toString function to support this.
+		</p>
+		<div align="middle">
+			<table style="width: 100%">
+				<tr>
+					<td>
+						<img src="./images/task4_before_flip.png" align="middle" width="500px" />
+						<figcaption align="middle">Before Edge Flipping</figcaption>
+					</td>
+					<td>
+						<img src="images/task4_after_flip.png" align="middle" width="500px" />
+						<figcaption align="middle">After Edge Flipping</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>Here is the result of the edge flipped teapot.</p>
+		<div align="middle">
+			<table style="width: 100%">
+				<tr>
+					<td>
+						<img src="./images/task4_teapot_bflip.png" align="middle" width="500px" />
+						<figcaption align="middle">Teapot Before Edge Flipping</figcaption>
+					</td>
+					<td>
+						<img src="images/task4_teapot_aflip.png" align="middle" width="500px" />
+						<figcaption align="middle">Teapot After Edge Flipping</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
 
 		<h3 align="middle">Part 5: Half-edge split</h3>
-
+		<p>
+			The implementation for this part is similar to what we do in the previous part, and with the experience of task 4, we
+			follow the advice in the spec to save all the relative mesh elements for slipping and draw a diagram before actually
+			setting neighbors and reassigning the mesh elements.
+		</p>
+		<p>
+			Different from what we do in task 4, this time we need to add a new midpoint vertex m on the splitting edge along
+			with 6 new half-edges (mb/bm, mc/cm, md/dm), and 3 new edges, and 2 new faces (amc, cmd). By labeling these new elements
+			in the diagram, we only have one argument mismatching during our final debugging. The bug rendering image we got after
+			split was similar to the one we got in task 4, a hole is generated after splitting and we can see the mesh on the other
+			side of the teapot through this black hole. After we check step by step with the diagram we draw and the function calls,
+			we fix this bug by changing the twin argument in the setNeighbors().
+		</p>
+		<div align="middle">
+			<table style="width: 100%">
+				<tr>
+					<td>
+						<img src="./images/task5_tp_bsplit.png" align="middle" width="500px" />
+						<figcaption align="middle">Teapot Before Edge Spitting</figcaption>
+					</td>
+					<td>
+						<img src="images/task5_tp_asplit.png" align="middle" width="500px" />
+						<figcaption align="middle">Teapot After Edge Splitting</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>Here is an image of teapot after both edge flip and split.</p>
+		<img src="images/task5_tp_splitnflip.png" align="middle" width="1000px" />
+		<p>
+			*Just For Fun: After doing splitting and flipping, when I was trying to take a screenshot and press cmd, I get this cool
+			bug image
+		</p>
+		<img src="images/task5_buggy_diagram.png" align="middle" width="1000px" />
+		<h3>Extra Credit</h3>
+		<p>
+			We also handled the case in which the splitting edge is a boundary. Since the boundary edge has nothing pointing to on
+			the other side after split, we do need to adjust new mesh elements created for not boundary case and also change the
+			arguments in setNeighbors() to support this.
+		</p>
+		<div align="middle">
+			<table style="width: 100%">
+				<tr>
+					<td>
+						<img src="./images/task5_ec_bsplit.png" align="middle" width="500px" />
+						<figcaption align="middle">Boundary Before Spitting (On left light)</figcaption>
+					</td>
+					<td>
+						<img src="images/task5_ec_asplit.png" align="middle" width="500px" />
+						<figcaption align="middle">Boundary After Spitting (On left light)</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
 
 		<h3 align="middle">Part 6: Loop subdivision for mesh upsampling</h3>
-
-
+		<p>
+			For this part, we followed the possible solution provided in student_code to implement the upsampe(). We first compute
+			the new positions of all old vertices in the triangle mesh using the predetermined weighting schemes provided in spec
+			and store them into Vertex::newPosition. Then, we calculate the new positions for those newly inserted vertices which
+			are connected by edges that will do edge flip in the later part and also load them into Vertex::Position. While doing
+			the above computation, we will also keep a flag to mark all the old vertices along with their edges. After that, we will
+			split every edge of the triangle mesh and store the new position of the those midpoint vertices in Vertex::newPosition.
+			Then, we will flip each edge that connect an old vertex and a new vertex. Finally, we will use the saved new position to
+			update the position of each vertex.
+		</p>
+		<div align="middle">
+			<table style="width: 100%">
+				<tr>
+					<td>
+						<img src="./images/task6_cube1.png" align="middle" width="500px" />
+						<figcaption align="middle">Cube before loop subdivision</figcaption>
+					</td>
+					<td>
+						<img src="images/task6_cube2.png" align="middle" width="500px" />
+						<figcaption align="middle">Cube After first loop subdivision</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<img src="./images/task6_cube3.png" align="middle" width="500px" />
+						<figcaption align="middle">Cube After second loop subdivision</figcaption>
+					</td>
+					<td>
+						<img src="images/task6_cube4.png" align="middle" width="500px" />
+						<figcaption align="middle">Cube After third loop subdivision</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			We can see that after doing the loop subdivision, the edge and corner of the meshes will become less sharp and more
+			smooth. Cube is the most obvious example of this effect. Here is how a cube change with loop subdivision. To keep the
+			overall feature of a cube, we can do some pre-splitting on some edges of the cube. Here are two different examples of
+			pre-splitting I did to the cube.
+		</p>
+		<div align="middle">
+			<table style="width: 100%">
+				<tr>
+					<td>
+						<img src="./images/task6_sp1.png" align="middle" width="500px" />
+						<figcaption align="middle">Pre-splitting Pattern 1</figcaption>
+					</td>
+					<td>
+						<img src="images/task6_sp1_rlt.png" align="middle" width="500px" />
+						<figcaption align="middle">Loop Subdivision Result</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<img src="./images/task6_sp2.png" align="middle" width="500px" />
+						<figcaption align="middle">Pre-splitting Pattern 2</figcaption>
+					</td>
+					<td>
+						<img src="images/task6_sp2_rlt.png" align="middle" width="500px" />
+						<figcaption align="middle">Loop Subdivision Result</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			The asymmetric behavior is due to the triangle mesh on each surface of the cube. There are only two triangles on each
+			side of the cube. During loop subdivision, the orientation of these triangles will cause some effect similar to
+			polarization and make the cube asymmetric. To fix this, we can do pre-splitting on each side as follow.
+		</p>
+		<div align="middle">
+			<table style="width: 100%">
+				<tr>
+					<td>
+						<img src="./images/task6_asym_nps.png" align="middle" width="500px" />
+						<figcaption align="middle">Original Cube Without Pre-splitting</figcaption>
+					</td>
+					<td>
+						<img src="images/task6_asym_ps0.png" align="middle" width="500px" />
+						<figcaption align="middle">Pre-splitting Pattern</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<img src="./images/task6_asym_ps1.png" align="middle" width="500px" />
+						<figcaption align="middle">Cube After First Upsampling</figcaption>
+					</td>
+					<td>
+						<img src="images/task6_asym_ps2.png" align="middle" width="500px" />
+						<figcaption align="middle">Cube After Second Upsampling</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<h3>Extra Credit</h3>
+		<p>
+			We also implement the extra credit to support meshes with boundary. We use the crease and boundaries slides from lecture
+			and update the weighting scheme to handle this situation. Here is the result of the final result for our implementation.
+		</p>
+		<img src="images/task6_ec_notes.png" align="middle" width="1000px" />
+		
+		<p>Here is the resulting beetle of our implementation</p>
+		<div align="middle">
+			<table style="width: 100%">
+				<tr>
+					<td>
+						<img src="./images/task6_ec_bsd.png" align="middle" width="500px" />
+						<figcaption align="middle">Beetle Before Upsampling</figcaption>
+					</td>
+					<td>
+						<img src="images/task6_ec_asd.png" align="middle" width="500px" />
+						<figcaption align="middle">Teapot After Upsampling</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
 
 		<h2 align="middle">Section III: Optional Extra Credit</h2>
 		<p>If you are not participating in the optional mesh competition, don't worry about this section!</p>
-
 		<h3 align="middle">Part 7: Design your own mesh!</h3>
-
+	</div>
+	<br>
+	<h1 align="middle">Link to Webpage Repo</h1>
+	<p align="middle" style="font-size: 150%;">
+		<a href="https://cal-cs184-student.github.io/sp22-project-webpages-Chyvannn/">
+			https://cal-cs184-student.github.io/sp22-project-webpages-Chyvannn/
+		</a>
+	</p>
 </body>
-
 </html>
