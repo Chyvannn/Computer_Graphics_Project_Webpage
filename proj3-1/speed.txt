@@ -1,0 +1,17 @@
+Part 2
+
+cow
+with 2      [PathTracer] Rendering... 100%! (0.0306s)
+without 2   [PathTracer] Rendering... 100%! (3.5916s)
+
+maxplanck
+with 2      [PathTracer] Rendering... 100%! (0.0364s)
+wituout 2   [PathTracer] Rendering... 100%! (37.3596s)
+
+peter
+with 2      [PathTracer] Rendering... 100%! (0.0293s)
+without 2   [PathTracer] Rendering... 100%! (28.1062s)
+
+building
+with 2      [PathTracer] Rendering... 100%! (0.0488s)
+without 2   [PathTracer] Rendering... 100%! (24.7743s)

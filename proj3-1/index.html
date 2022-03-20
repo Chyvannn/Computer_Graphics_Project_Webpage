@@ -1,7 +1,455 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-1 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<style>
+		div.padded {
+			padding-top: 0px;
+			padding-right: 100px;
+			padding-bottom: 0.25in;
+			padding-left: 100px;
+		}
+	</style>
+	<title>Assignment 3: PathTracer Writeup Page</title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+
+<body>
+	<br />
+	<h1 align="middle">Assignment 3: PathTracer</h1>
+	<h2 align="middle">Yifan Zhong, Yicheng Sun, CS 184-162sufferer</h2>
+
+	<div class="padded">
+		<h2 align="middle">Overview</h2>
+		<p>
+			For this assignment, we build a path tracer. From part 1 to part 5, we implement various algorithms to support the
+			rendering of a low-noise, relatively fast rendered imaage. In part 1, we implement the basic ray generator to sample
+			ray and intersection checker which can be used in the later part. For part 2, we construct BVH tree to help accelerate
+			the path tracing algorithm and laid the fundation for the later parts. part 3 and part 4 let us implement the direct and
+			global illumination and enables us to get a well shaded image. Finally, we implemnt adaptive sampling in part 5 to reduce
+			noise. During the implementation, we applied the algorithm learn in leture and discussion, including Monte Carlo Estimation,
+			Moller-Trumbore Algorithm, etc. While doing this assignment, we found that one of the most challenging things is that this
+			assignment requires a more solid background in math. While most of the equations are provided to us, to have a better
+			understanding about the concepts, it requires us to spend some time derive them ourselves. Moreover, the edge cases is also
+			tricky to check, especially in part 3 and 4.
+		</p>
+		<h2 align="middle">Part 1: Ray Generation and Intersection</h2>
+		<p>
+			To generate the camera ray, what we do first is to compute the bottom-left and upper-right position of the virtual
+			sensor. The equation is given in the spec. The bottom-left corner is locate at (-tan(hFov/2), -tan(vFov/2), -1), the
+			upper-right cornor is at location (tan(hFov/2), tan(vFov/2), -1). Here hFov and vFoc are field of view angles along X
+			and Y axis. The interaction of the ray and virtual camera sensor will be calculated using the relative ratio.
+		</p>
+		<pre align="middle"> Ray_x = (top_right_x - bottom_left_x) * x + bottom_left_x </pre>
+		<pre align="middle"> Ray_y = (top_right_y - bottom_left_y) * y + bottom_left_y </pre>
+		<p>
+			We then do a matrix-vector multiplication to multiply the ray equation with c2w to perform camera-toworld rotation
+			and get the ray in world coordinate. We also set the max_t and min_t before returning the final ray result.
+			In terms of the implementation of intersection related algorithms, has_intersaction() and intersect() is implement
+			using the Moller-Trumbore algorithms convered in lecture and discussion. We calculate
+			<pre align="middle">e1 = p2 - p1</pre>
+			<pre align="middle">e2 = p3 - p1</pre>
+			<pre align="middle">T = r.o - p1</pre>
+			<pre align="middle">P = cross(r.d, e2)</pre>
+			<pre align="middle">Q = cross(T, e1)</pre>
+			<pre align="middle">det = dot(P, e1)</pre>
+			<pre align="middle">t = dot(Q, E2) / det</pre>
+			<pre align="middle">u = dot(P, T)/ det</pre>
+			<pre align="middle">v =dot(Q, r.d) / det</pre>
+		</p>
+		<div align="center"><img src = "./images/Part_1/Moller-Trumbore Algorithm.png" width="800px"></div>
+		<p>
+			Here some variable names are different from what we use during the discussion. Our points start from p1. T is same as S,
+			P is same as S1, Q is same as S2. t, u, v are each row entry on the right side of the equation.
+		</p>
+		<p>
+			If the intersection exist and pass the bound check
+			<pre align="middle">(min_t < t < max_t & 0 <=u <=1 & v> 0 & u + v < 1)</pre>
+			We will set the max_t to t since after a ray intersect with a surface, if will no longer spread along with the original
+			direction. Since u, v are two barycentric coordinates, we will use them to calculate the surface normal at the
+			intersection. The main idea of Moller-Trumbore Algorithm is to represent a point inside the triangle using barycentric
+			coordinates. P = (1 - u - v) * p1 + u*p2 + v * p. The ray equation is r(t) = O - tD.Combine them together, we get O - p0
+			= -tD + b1 * (P2 - P1) + b2 * (p3 - p1). Applying Cramer's rule, we will be able to get the result.
+		</p>
+		<p>
+			Given the ray equation r(t) = O + D * t, and the equation of the sphere (p - c)^2 - R ^ 2 = 0, combine them we get ( O +
+			tD - c)^2 - R^2 = 0. Using the quadratic formula, we can get two t values cooresponding to a closer t1 and a further t2.
+			For both t, we will check if they fall in the range of min_t and max_t. We then assign the closer t1 to max_t similar to
+			what we do for triangle intersection.
+		</p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/Part_1/CBcoil.png" width="480px" />
+						<figcaption align="middle">The Coil</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_1/CBgems.png" width="480px" />
+						<figcaption align="middle">The Gems</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_1/CBempty_p1.png" width="480px" />
+						<figcaption align="middle">The Coil</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_1/CBspheres_p1.png" width="480px" />
+						<figcaption align="middle">The Gems</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<h2 align="middle">Part 2: Bounding Volume Hierarchy</h2>
+		<p>
+			For the BVH construction algorithm, we first iterate through the whole list of primitives counting the total size of the
+			list and adding them into the current bounding box. We then initialize the BVHNode using the current bounding box
+			includs all the primitives. If the total size of the primitive list is not larger than max_leaf_size, we will simply set
+			the start and end of the BVHNode to the one we used in the current recursive call and return this BVHNode. Otherwise, we
+			will start finding a point to split on.
+		</p>
+		<p>
+			We will compare extent of the bounding box along different coordinates and choose the longest one. The heuristic we
+			chose is that the number of primitives is propertional to the exent of the bounding box along a coordinate. Thus, by
+			choosing the longest coordinate to split, we will be able to get rid of the most number of primitives that are not
+			intersected with the light.
+		</p>
+		<p>
+			After determining the coordinate to split, we will sort the primitives based on the centroid position of the bounding
+			box along the pre-determined axis.
+		</p>
+		<p>
+			Finally, we will call construct_bvh on the left and right portion of the current bouding box. The left one is from start
+			to start + int(size/2), the right one is from start + int(size/2) to end. Their return BVHNode will be assigned to the
+			left and right child of the current node.
+		</p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/Part_2/building.png" width="480px" />
+						<figcaption align="middle">The Building</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_2/peter.png" width="480px" />
+						<figcaption align="middle">Peter</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_2/dragon.png" width="480px" />
+						<figcaption align="middle">The Dragon</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_2/maxplanck.png" width="480px" />
+						<figcaption align="middle">Max Planck</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>The accelerate result after using BVH is showed in the table as follow</p>
+		<div align="center">
+			<table style="width: 50%", border = "1">
+				<head>
+					<title>BVH Acceleration Tables</title>
+				</head>
+				<tr>
+					<th>.dae file name</th>
+					<th>Without BVH Acceleration</th>
+					<th>With BVH Acceleration</th>
+				</tr>
+				<tr>
+					<td>Cow</td>
+					<td>3.5916s</td>
+					<td>0.0306s</td>
+				</tr>
+				<tr>
+					<td>maxplanck</td>
+					<td>37.3596s</td>
+					<td>0.0364s</td>
+				</tr>
+				<tr>
+					<td>peter</td>
+					<td>28.1062s</td>
+					<td>0.0293s</td>
+				</tr>
+				<tr>
+					<td>building</td>
+					<td>24.7743s</td>
+					<td>0.0488s</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			The result turns out that with BVH acceleration, the speed will be about 1000x faster for the moderate complexity .dae
+			files. Using BVH tree and bounding box, we can skip a large amount of primitives that can be guaranteed to have no
+			inersection with the right. Thus, can reduce the computation load and speed up the rendering process.
+		</p>
+	
+		<h2 align="middle">Part 3: Direct Illumination</h2>
+		<p>
+			For the estimate_direct_lighting_hemisphere, we loop num_samples times to get the total light out. In each loop, we
+			first use hemisphere sampler to get a direction of outward light w_in. The inward light is transfered to be in the world
+			coordinate using matrix-vector multiplication with o2w, named wj. With the hip point and the direction of the inward
+			light in the world coordinate, we will be able to establish a light equation. ESP_F is also used in this equation to
+			avoid numerical precision issues when the light is first generated from the origin and directly interested with the
+			origin surface. Here, ESP_F is applied to both the origin of the light and the min_t of the light. We then check if the
+			light intersect with any objects in the scene which is represented in the form of a BVH tree. If intersection exist, we
+			will then calculate
+			<pre align="middle">fr = isect.bsdf->f(w_out, w_in)</pre>
+			<pre align="middle">Li = temp_isect.bsdf->get_emission()</pre>
+			as showed in the Monte Carlo Estimator. The cos(theta_j) term is get from the dot product of insect.n and v. The wj
+			vector is normalized be before using in the dot product. The last step for each loop is to add the light value for the
+			current loop. According to the Monte Carlo Estimator for sampling from a uniformly distributed hemisphere, we add up all
+			the sampling result and multiply the averaged result by 2pi since the probability of getting each sample is 1/2pi. After
+			we sum up all the sampes, we take the average by dividing it by the number fo samples to get the final estimated result.
+		</p>
+		<p>Here is the general equation for the Monte Carlo Estimator</p>
+		<div align="center"><img src="./images/Part_3/monte_carlo_estimator.png" width="500px"></div>
+		<p>
+			For the estimate_direct_lighting_importance, we first check if the light source is a point light. The point light source
+			will have the sampling number of 1 since all the lights sampled from a point light will always be the same, otherwise,
+			the sampling number is the same as the ns_area_light. Then, similar to what we did for
+			estimate_direct_lighting_hemisphere, we sample the a light from the scene using sample_L(hit_p, &w_in, &dist, &pdf). The
+			returned radiance, w_in, dist, pdf will be used later in the Mante Carlo Estimation. Again, we establish the ray
+			equation from the value we sampled. ESP_t is used in both min_t and distToLight to alliviate the numerical precision
+			issues causing a ray to intersect with its origin surface. With this ray equation, we check if the light intersect with
+			any objects within the scene in the form of a BVH tree. If it does, we will add the current estimated value into the
+			total estimated value. The Li term in the Monte Carlo Estimator is given as the return value from sample_L(). Since the
+			direction vector is normalized, after converting the light into the object coordinate, the cos value turns out to be
+			z-axis value. We use (w2o * wi).z to get the cos value. Here, the probability is given in sample_L as pdf. With all
+			necessary terms, we can derive the final value of the Monte Carlo Estimation.
+		</p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/Part_3/bunny_hs.png" width="480px" />
+						<figcaption align="middle">Bunny with hemisphere sampling</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_3/bunny_is.png" width="480px" />
+						<figcaption align="middle">Bunny with lighting sampling</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_3/spheres_hs.png" width="480px" />
+						<figcaption align="middle">Spheres with hemisphere sampling</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_3/spheres_is.png" width="480px" />
+						<figcaption align="middle">Spheres with lighting sampling</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<P>Focusing on one particular scene and use different number of area lights, we get the following set of images.</P>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/Part_3/spheres_is_l1.png" width="480px" />
+						<figcaption align="middle">Spheres with 1 light ray</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_3/spheres_is_l4.png" width="480px" />
+						<figcaption align="middle">Spheres with 4 light rays</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_3/spheres_is_l16.png" width="480px" />
+						<figcaption align="middle">Spheres with 16 light rays</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_3/spheres_is_l64.png" width="480px" />
+						<figcaption align="middle">Spheres with 64 light rays</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			From the above output images using 1 to 64 linght rays, we can see that 1 area light will have a large amount of noise.
+			As the light number increase, the noise will reduce.
+		</p>
+		<p>
+			Comparing with hemisphere sampling, lighting sampling can reduce a significant amount of noise in the image, and the
+			result is better than the one get from hemisphere sampling give n the same parameters.
+		</p>
+		
+		<h2 align="middle">Part 4: Global Illumination</h2>
+		<p>
+			We first PI/10 as our Russian Roulette Probablity. The recursion will only continue if the coin_flip(1 -
+			Russian_Roulette_p) returns true and the current depth is greater than 1. If the recursive call continues, we will then
+			use sample_f() to evaluate the BSDF at (wo, wi) with given w_out. The resulting pdf and wi will be used in the later
+			part. With wi, we establish the ray equation origin at hit_p and direct at o2w*wi. Similar to what we did in Part 3, we
+			will also yuse ESP_F to alliviate the numerical precision issues. We then evaluate the intersaction between the ray and
+			the scene in the form of BVH tree. If the ray can intersect with the objects in the scene, we will use this ray in the
+			following recursive call to evaluate the next level bounce and add the result back to the current level. If the ray have
+			no intersection, we will simply return the one_bounce_radiance result at the current level.
+		</p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/bench_both.png" width="480px" />
+						<figcaption align="middle">Bench with global illumination</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_4/blob_both.png" width="480px" />
+						<figcaption align="middle">Blob with global illumination</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/spheres_both.png" width="480px" />
+						<figcaption align="middle">Spheres with global illumination</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			Pick a particular scene, here are the images with only direct illumination and with only indirect illumination. Here, we
+			only inlcude the zero bounce in the direct illumination.
+		</p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/spheres_dir.png" width="480px" />
+						<figcaption align="middle">Spheres with direct illumination</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_4/spheres_indir.png" width="480px" />
+						<figcaption align="middle">Spheres with indirect illumination</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>For Bunny.dae, we compared rendered views with different max_ray_depth. The result is as follow: </p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/CBbunny_m0.png" width="480px" />
+						<figcaption align="middle">Bunny with 0-bounce</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_4/CBbunny_m1.png" width="480px" />
+						<figcaption align="middle">Bunny with 1-bounce</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/CBbunny_m2.png" width="480px" />
+						<figcaption align="middle">Bunny with 2-bounce</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_4/CBbunny_m3.png" width="480px" />
+						<figcaption align="middle">Bunny with 3-bounce</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/CBbunny_m100.png" width="480px" />
+						<figcaption align="middle">Bunny with 100-bounce</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>We also choose a scene to compare randered view with various sample-per-pixel rates. Here are the results:</p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/CBsphere1.png" width="480px" />
+						<figcaption align="middle">Spheres with 1 sample-per-pixel rate</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_4/CBsphere2.png" width="480px" />
+						<figcaption align="middle">Spheres with 2 sample-per-pixel rate</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/CBsphere4.png" width="480px" />
+						<figcaption align="middle">Spheres with 4 sample-per-pixel rate</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_4/CBsphere8.png" width="480px" />
+						<figcaption align="middle">Spheres with 8 sample-per-pixel rate</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/CBsphere16.png" width="480px" />
+						<figcaption align="middle">Spheres with 16 sample-per-pixel rate</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_4/CBsphere64.png" width="480px" />
+						<figcaption align="middle">Spheres with 64 sample-per-pixel rate</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_4/CBsphere1024.png" width="480px" />
+						<figcaption align="middle">Bunny with 1024-bounce</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<h2 align="middle">Part 5: Adaptive Sampling</h2>
+		<p>
+			For adaptive sampling, we a loop to iterate through sample number iterations. For each iteration, we will use s1 and s2
+			to keep track of the sum and the squred sum of illuminance returned from est_radiance_illuminatino(). Whenever the
+			iteration number is the multiple fo samplesPerPatch, the algorithm will check if we have reached the 95% confidence
+			based on the samples we have so far. To check the confidence, we first calculate the mean u and the standard deviation
+			std using s1 and s2. Then we check if
+			<pre align="middle">1.96 * std / sqrt(i) <= maxTolerance * u</pre>
+			If the targeted confidence has alreay achieved, we will break out of the loop early. Since our targeted confidency is
+			95%, we set maxTolerance to be 0.05.
+		</p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/Part_5/blob.png" width="480px" />
+						<figcaption align="middle">Spheres with direct illumination</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_5/blob_rate.png" width="480px" />
+						<figcaption align="middle">Spheres with indirect illumination</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/Part_5/wall-e.png" width="480px" />
+						<figcaption align="middle">Spheres with direct illumination</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/Part_5/wall-e_rate.png" width="480px" />
+						<figcaption align="middle">Spheres with indirect illumination</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<h2 align="middle">Summary</h2>
+		<p>
+			While doing this project, we are using the code_with_me extension in CLion to do the project together most of time. The
+			collaboration worked really good and we can always helping each other figuring out possible edge cases and debuging
+			approaches. After this assignment, we get a better understanding about the path tracing pipeline and get a more
+			comprehansive knowledge about how to apply the algorithms in practice.
+		</p>
+		<h1 align="middle">Link to Webpage Repo</h1>
+		<p align="middle" style="font-size: 150%;">
+			<a href="https://cal-cs184-student.github.io/sp22-project-webpages-Chyvannn/">
+				https://cal-cs184-student.github.io/sp22-project-webpages-Chyvannn/
+			</a>
+		</p>
+	</div>
+</body>
+
 </html>
