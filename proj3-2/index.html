@@ -18,63 +18,106 @@
 <body>
 	<br />
 	<h1 align="middle">Assignment 3: PathTracer</h1>
-	<h2 align="middle">Your Name</h2>
+	<h2 align="middle">Yifan Zhong, Yicheng Sun, CS184-OneMoreSlipDay</h2>
 
 	<div class="padded">
-		<p>Use this section to write an overview of the assignment. All of the text in your write-up should be <em>in
-				your own words</em>. If you need to add additional HTML features to this document, you can search the <a
-				href="http://www.w3schools.com/">http://www.w3schools.com/</a> website for instructions. To edit the
-			HTML, you can just copy and paste existing chunks and fill in the text and image file names appropriately.
+		<h2 align="middle">Overview</h2>
+		<p>
+			In this project, we extended what we do in project 3-1 and implement the support to the reflection and refraction image
+			and also the microfacet model, which corresponding to part 1 and part 2. The coding is straightfoward with algorithms
+			and tips provided in the spec. One of the major issue we faced is that when we are implementing part 1 task 4, we used
+			cos_theta instead of abs_cos_theta which result in black dots on the sphere. 
 		</p>
-		<o>The website writeup is intended to be a self-contained walkthrough of the assignment: we want this to be a
-			piece of work which showcases your understanding of relevant concepts through both mesh images as well as
-			written explanations about what you did to complete each part of the assignment. Try to be as clear and
-			organized as possible when writing about your own output files or extensions to the assignment. We want to
-			understand what you've achieved and how you've done it!</p>
-			<p>If you are well-versed in web development, feel free to ditch this template and make a better looking
-				page. Just make sure that you include all the components as we've laid them out here. </p>
+		<h2 align="middle">Part 1: Mirror and Glass Materials</h2>
+		<p>
+			In this part, we implement the mirror and glass models by stimulating the reflection and fraction effects. For
+			reflection, we can do a symmetric transformation with z axis to get direction wi. For refraction, after checking total
+			internal reflection, we use the pesudocode provided to calcuate teh refracted light. Finally, for glass material, we
+			first check if total internal reflection occur. If it does, we will only do reflection on wo. Otherwise, we use
+			Schlick's reflection coefficient R to do a coin flip to mix the reflect and refract effects together.
+		</p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/task1_spheres_0.png" width="480px" />
+						<figcaption align="middle">Spheres with 0 bounce</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/task1_spheres_1.png" width="480px" />
+						<figcaption align="middle">Spheres with 1 bounce</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/task1_spheres_2.png" width="480px" />
+						<figcaption align="middle">Spheres with 2 bounce</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/task1_spheres_3.png" width="480px" />
+						<figcaption align="middle">Spheres with 3 bounce</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/task1_spheres_4.png" width="480px" />
+						<figcaption align="middle">Spheres with 4 bounce</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/task1_spheres_5.png" width="480px" />
+						<figcaption align="middle">Spheres with 5 bounce</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/task1_spheres_100.png" width="480px" />
+						<figcaption align="middle">Spheres with 100 bounce</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<ul>
+			<li>
+				The image we get with max depth from 0 to 4 are different, but from 5 to 100 are the same.
+			</li>
+			<li>
+				Whenmax depth is 0, the image we got only contains direct light from the source and only the light source is rendered.
+			</li>
+			<li>
+				When max depth is 1, the image start showing the reflections, surrounding walls are also lighted up due to one bounce
+				light, but the ceiling is still dark except the light source. We can also see the specular reflection and the shadow of
+				both spheres. However, the majority of both spheres are still dark since they need to reflect/refract light from the
+				surrounding walls but only one bounce light is allowed. It is not possible to have refraction in this case.
+			</li>
+			<li>
+				When max depth is 2, the ceiling is lit up and the left sphere can also get deffuse reflected lights from the
+				surrounding walls. However, the ceiling can still not properly be reflected on the left sphere since it requires at
+				least 3 bounces. For the right sphere, there is a lot of black dots which makes the sphere almost dark. The refraction
+				can not be properly rendered since only 2 bounces are allowed, most light refracted into the glass sphere will not be
+				able to get out. The reflection of the right sphere on the left sphere is not properly rendered since it requires at
+				lease 4 bounce. The shadow of both sphere is softer with more surrounding light.
+			</li>
+			<li>
+				When max depth is 3, the ceiling reflection on the left sphere is lit up. The refraction on the right sphere is properly
+				rendered. There is a bright spot on the floor under the right sphere which is light refracted twice onto the floor with
+				3 bounces. The reflection of the right sphere on the left sphere is still dark.
+			</li>
+			<li>
+				When max depth is 4, the reflection of the right sphere is lit up on the left sphere. There is also a bright spot on the
+				right wall which is refracted from the righ sphere with 4 bounce.
+			</li>
+			<li>
+				When max depth > 4, the image is almost the same.
+			</li>
+		</ul>
+		<h2 align="middle">Part 2: Microfacet Material</h2>
+		<p>
+			In this part, we implemented the Microfacet model and support isotropic rough conductors that only reflect. We use NDF
+			describe how the microfacets's normals are distributed and use Beckmann distribution to evalute the overall
+			distribution. We then implement Fresnel term to evaluate the color information. Finally, we implement importance
+			sampling to sample theta and omega using PDFs and combine them with get the sampling result.
+		</p>
 
-			<h2 align="middle">Part 1: Ray Generation and Intersection</h2>
-			<p>Describe what you did in Part 1. etc...</p>
-			<div align="center">
-				<table style="width: 100%">
-					<tr>
-						<td align="middle">
-							<img src="images/example_image.png" width="480px" />
-							<figcaption align="middle">Results Caption: my bunny is the bounciest bunny</figcaption>
-					</tr>
-				</table>
-			</div>
-			<p>Here is an example of how to include a simple formula:</p>
-			<p align="middle">
-			<pre align="middle">a^2 + b^2 = c^2</pre>
-			</p>
-			<p>or, alternatively, you can include an SVG image of a LaTex formula.</p>
-			<p>This time it's your job to copy-paste in the rest of the sections :)</p>
-
-
-
-			<h2 align="middle">A Few Notes On Webpages</h2>
-			<p>Here are a few problems students have encountered in the past. You will probably encounter these problems
-				at some point, so don't wait until right before the deadline to check that everything is working. Test
-				your website on the instructional machines early!</p>
-			<ul>
-				<li>Your main report page should be called index.html.</li>
-				<li>Be sure to include and turn in all of the other files (such as images) that are linked in your
-					report!</li>
-				<li>Use only <em>relative</em> paths to files, such as
-					<pre>"./images/image.jpg"</pre>
-					Do <em>NOT</em> use absolute paths, such as
-					<pre>"/Users/student/Desktop/image.jpg"</pre>
-				</li>
-				<li>Pay close attention to your filename extensions. Remember that on UNIX systems (such as the
-					instructional machines), capitalization matters.
-					<pre>.png != .jpeg != .jpg != .JPG</pre>
-				<li>Be sure to adjust the permissions on your files so that they are world readable. For more
-					information on this please see this tutorial: <a
-						href="http://www.grymoire.com/Unix/Permissions.html">http://www.grymoire.com/Unix/Permissions.html</a>
-				</li>
-				<li>And again, test your website on the instructional machines early!</li>
 	</div>
 </body>
 
