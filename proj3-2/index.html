@@ -117,7 +117,107 @@
 			distribution. We then implement Fresnel term to evaluate the color information. Finally, we implement importance
 			sampling to sample theta and omega using PDFs and combine them with get the sampling result.
 		</p>
-
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/task2_dragon_0.005.png" width="480px" />
+						<figcaption align="middle">Dragon with alpha set to 0.005</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/task2_dragon_0.05.png" width="480px" />
+						<figcaption align="middle">Dragon with alpha set to 0.05</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/task2_dragon_0.25.png" width="480px" />
+						<figcaption align="middle">Dragon with alpha set to 0.25</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/task2_dragon_0.5.png" width="480px" />
+						<figcaption align="middle">Dragon with alpha set to 0.5</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			When we change the alpha value of the .dae file, we can see that the roughness of the rendered material image is also
+			changing. As we increase the alpha value, the overall color and the reflection effects will be changing. When alpha is
+			0.005, we can see that the rendered dragon is almost black and the specular reflection is also weak in the middle part
+			of the dragon body. When we change alpha value to 0.5 gradually, we can see that the overall color is getting lighter.
+			The specular reflection part will also become wider. Small alpha value will have result in greater PDF and NDF which
+			means that the environment will have greater effects on the object and the sampling range is wide. As alpha increase,
+			the surroundings will have less impact on the obejct and the sampling range will be smaller.
+		</p>
+		<div align="center">
+			<table style="width: 100%">
+				<tr>
+					<td align="middle">
+						<img src="images/task2_bunny_hs.png" width="480px" />
+						<figcaption align="middle">Bunny rendered using cosin hemisphere sampling</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/task2_bunny_is.png" width="480px" />
+						<figcaption align="middle">Bunny rendered using importance sampling</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			The cosin hemisphere sampling will result in the rendered bunny with more noise and white dots. The bunny is more
+			grandular when the one rendered using importance sampling. The oveall color of importance sampled bunny will be darker
+			than the one rendered with cosin hemisphere sampling. Impoartance sampling in this case can reduce he roughness of the
+			image.
+		</p>
+		<div align="center">
+			<img src="./images/task2_dragon_Fe.png" width="800px">
+			<figcaption align="middle">Dragon with material Fe</figcaption>
+		</div>
+		<p>
+			For this task, we use iron(Fe) as the material and we can found the image is really different from the one with Au. Here
+			are the constants we changed in .dae file.
+		</p>
+		<div align="center">
+			<table style="width: 50%" , border="1">
+				<head>
+					<title>Iron(Fe) eta and K value</title>
+				</head>
+				<tr>
+					<th>Wavelength (nm)</th>
+					<th>eta</th>
+					<th>K</th>
+				</tr>
+				<tr>
+					<th>614 (red)</th>
+					<th>1.5454</th>
+					<th>6.9982</th>
+				</tr>
+				<tr>
+					<th>549 (green)</th>
+					<th>1.2216</th>
+					<th>5.9220</th>
+				</tr>
+				<tr>
+					<th>466 (blue)</th>
+					<th>1.0355</th>
+					<th>4.6354</th>
+				</tr>
+			</table>
+		</div>
+		<h2 align="middle">Summary</h2>
+		<p>
+			This project is fairly straightfoward, each of us just complete one part of the project. Everything went well. When one
+			of us encountered some issue in our own part, the other one will always give some help. In this project, we learned how
+			to render the glass material and using reflection adn refraction to make the material more realistic. We also learned
+			different materials are represented while rendering.
+		</p>
+		<h1 align="middle">Link to Webpage Repo</h1>
+		<p align="middle" style="font-size: 150%;">
+			<a href="https://cal-cs184-student.github.io/sp22-project-webpages-Chyvannn/">
+				https://cal-cs184-student.github.io/sp22-project-webpages-Chyvannn/
+			</a>
+		</p>
 	</div>
 </body>
 
