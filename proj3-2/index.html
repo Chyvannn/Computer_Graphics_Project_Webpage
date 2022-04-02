@@ -10,7 +10,7 @@
 			padding-left: 100px;
 		}
 	</style>
-	<title>Your Name | CS 184</title>
+	<title>CS 184: Project 3-2 Writeup Page</title>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
 </head>
@@ -23,18 +23,44 @@
 	<div class="padded">
 		<h2 align="middle">Overview</h2>
 		<p>
-			In this project, we extended what we do in project 3-1 and implement the support to the reflection and refraction image
-			and also the microfacet model, which corresponding to part 1 and part 2. The coding is straightfoward with algorithms
-			and tips provided in the spec. One of the major issue we faced is that when we are implementing part 1 task 4, we used
-			cos_theta instead of abs_cos_theta which result in black dots on the sphere. 
+			In this project we extend what we did in project 3-2 and implement additional support for our path tracer, including
+			reflection and refraction effects on mirror and glass material (part 1), and microfacet material (part 2). After
+			implementing part 1, with the combination of reflection and refraction, we were able to render realistic images which
+			have light passing throught the glass material and shooting on the walls, and simulate the deformation of the
+			surrounding environment in a spherical mirror. After implementing part 2, we were able to render images of different
+			conductive materials based on their refraction indices.
+		</p>
+		<p>
+			In terms of the issues we encountered during the implementation, we took a long time debugging the glass material
+			rendering. The coin flip and the calculation of Schlick's reflection coefficient R is tricky. We first use reflection
+			for the 1-R (refraction) case and resulted in two mirror spheres. Then, we found that using purly cos_theta when
+			calculating R resulted in a glass sphere with a lot of black dots. This issue was finally solved by using abs_cos_theta
+			instead.
 		</p>
 		<h2 align="middle">Part 1: Mirror and Glass Materials</h2>
 		<p>
 			In this part, we implement the mirror and glass models by stimulating the reflection and fraction effects. For
-			reflection, we can do a symmetric transformation with z axis to get direction wi. For refraction, after checking total
-			internal reflection, we use the pesudocode provided to calcuate teh refracted light. Finally, for glass material, we
-			first check if total internal reflection occur. If it does, we will only do reflection on wo. Otherwise, we use
-			Schlick's reflection coefficient R to do a coin flip to mix the reflect and refract effects together.
+			reflection, since the origin is our intersection point and z-axis has the same direction as our normal vector, all the
+			transformation about the light direction is in the xy plane. We can simply do a symmetric transformation for wo along
+			z-axis to get wi. The outgoing light becomes (-x, -y, z) if the incomming light is (x, y, z).
+		</p>
+		<p>
+			For refraction, we treat x, y, z as functions of two angluar values theta and phi. Since entering and exiting materials
+			will have different index of refraction, we also check z value of wo to choose the correct eta and sign which will be
+			used to calculate wi later. After checking if total internal reflection will happen, we use the pesudocode provided to
+			calculate the refracted light wi which applies the eta we get from ior and the incomming light wo. One thing to note is
+			that the z value of wi will have different sign as wo since the surface of our intersaction is at origin and wo and wi
+			will be pointing at two opposite direction of this surface.
+		</p>
+		<p>
+			Finally, for glass material, we choose the algorithms by checking if the total internal reflection would occur. If total
+			inter reflection wil happen under the current setting, we can only use reflection function to get wi which is already
+			implemented in the previous part. Otherwise, we will need to combine both the reflection and refaction to render the
+			object. In this case, we first calculate the Schlick's reflection coefficient R which simulate a simple version of
+			fresnel equations. R and 1-R cooresponding to the distribution of lights that result in reflection and refraction
+			respectively. For reflection (R term), we use the reflection function we implement in the previous part and set PDF to
+			R. For refraction (1-R) term, we use the refraction function we implemented in the previous part and set PDF to 1-R.
+			This randomlized sampling process let us combine these effects together to get a realistic glass material image.
 		</p>
 		<div align="center">
 			<table style="width: 100%">
@@ -207,10 +233,12 @@
 		</div>
 		<h2 align="middle">Summary</h2>
 		<p>
-			This project is fairly straightfoward, each of us just complete one part of the project. Everything went well. When one
-			of us encountered some issue in our own part, the other one will always give some help. In this project, we learned how
-			to render the glass material and using reflection adn refraction to make the material more realistic. We also learned
-			different materials are represented while rendering.
+			In term of collaberation, we are each responsible for one part of this project. Since one of us M1 mac which cannot run
+			the stuff solution provided in the project skeleton ,we use the live share feature in CLion instead to do the project
+			together. This also let us keep up with each other's progress easily. In this project, one thing we learned and felt
+			most impressive is how we deal with the glass material that encounters both reflection and refraction. The Schlick's
+			reflection coefficient R uses a randomlized sampling process to stimulate the distribution of the light energy when
+			interfere with surface of an object.
 		</p>
 		<h1 align="middle">Link to Webpage Repo</h1>
 		<p align="middle" style="font-size: 150%;">
