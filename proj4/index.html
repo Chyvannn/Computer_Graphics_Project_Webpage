@@ -1,7 +1,244 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 4 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<style>
+		body {
+			padding: 100px;
+			width: 1200px;
+			margin: auto;
+			text-align: left;
+			font-weight: 300;
+			font-family: 'Open Sans', sans-serif;
+			color: #121212;
+		}
+
+		h1, h2, h3, h4 {
+			font-family: 'Source Sans Pro', sans-serif;
+		}
+	</style>
+	<title>CS 184 Mesh Editor</title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+	<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
+	<h1 align="middle">Project 4: Cloth Simulator</h1>
+	<h2 align="middle">Yifan Zhong & Yicheng Sun, CS184-TeamOfTwo</h2>
+
+	<br>
+
+	<div>
+
+		<h2 align="middle">Overview</h2>
+		<p>
+			In this project, we implemented a physical real-time simulator to simulate the physical effects of cloth. In part 1, we
+			setup a grid of point mass and springs to be used in the later parts. In part 2, we will apply the net force onto the
+			point of mass, update the position of each point mass so that the cloth model can act based its position and force. In
+			part 3, we handle the collision of the cloth model with sphere and plane to simulate the cloth falling on other objects.
+			In part 4, we add the support to the self-collision of the cloth model so that we can simulate the scenario of cloth
+			falling on itself. Finally, in part 5, we implement different types of shaders to give different effects to the cloth. A
+			more detailed explaintion will be included in each parts.
+		</p>
+		<p>
+			This project let us break a contiguous cloth to a collection points and simple spings so that we can process each
+			element of the cloth independently by applying physical rules to cloth model. From this project, we think it is possible
+			to extend the model into different objects, for instance, water and smoke, but the spring grip may be different from the
+			cloth.
+		</p>
+
+		<h2 align="middle">Part 1: Masses and springs</h2>
+		<p>
+			For this part, we first calculate the steps in x and y/z coordinates. Since the number of points is 1 more than the
+			number of grids, we divided the width and height by the number of point - 1.
+		</p>
+		<p>
+			If cloth is horizantally oriented, the cloth is in the xz plane. Thus, we iterate through the z and x coordinate in a
+			nested loop. For each position, we check if the position is contained in pinned and pass the bool to PointMass. x, z
+			values in the Vector3D are set to step * current point index, and y is set to 1 respectively.
+		</p>
+		<p>
+			If cloth is vertically oriented, the cloth is in the xy plane. Thus, we iterate through the y and x coordinate in a
+			nested loop. For each position, assign the bool value according to the position in pinned vector. x, y values are set to
+			step * current point index, and z is set to a random value from -1/1000 to 1/1000 respectively.
+		</p>
+		<p>
+			To add springs, starting from the first point mass we added in the previous steps, we check if the left and above point
+			mass exist. For structural constraints, the point of mass above is at index of [current_index - number of width], the
+			left point of mass is [current_index - 1]. For shearing constraints, the point of mass to at the upper left position is
+			at index of [current_index - number of width - 1], at the bottom right is at [current_index - number of width + 1]. For
+			bending constraints, two points above is [current_index - 2 * number of width], at left is [current_index - 2].
+		</p>
+		<div align="center">
+			<table style="width: 1200px">
+				<tr>
+					<td align="middle">
+						<img src="images/part1_pinned2_1.png" width="600px" />
+						<figcaption align="middle">Cloth with 2 pinned points</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part1_pinned2_2.png" width="600px" />
+						<figcaption align="middle">Cloth with 2 pinned points</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div align="center">
+			<img src="./images/Part1_with_all.png" width="1000px">
+			<figcaption align="middle">Cloth with all the constraints</figcaption>
+		</div>
+		<div align="center">
+			<img src="./images/Part1_shearing_only.png" width="1000px">
+			<figcaption align="middle">Cloth with only shearing constraints</figcaption>
+		</div>
+		<div align="center">
+			<img src="./images/Part1_without_shearing.png" width="1000px">
+			<figcaption align="middle">Cloth without shearing constrains</figcaption>
+		</div>
+
+		<h2 align="middle">Part 2: Simulation via numerical integration</h2>
+		<ol>
+			<li>In this part, we implemented the physical effects to the cloth model to simulate the real motions of the cloth.</li>
+			<li>
+				The first step we did is to calcuate the total force of applied on each point of mass. The net force can be break into
+				two parts, external force and internal force. To calculate the external force, we will use Newtowns' 2nd Law, F = ma. We
+				already know external_acceleration. Thus, we will iterate through the point masses and for each point mass, we will
+				initialize the net force vector to 0 and apply all accelerations to this point mass. We then apply the spring correction
+				force based on Hooke's Law.
+			</li>
+			<li>
+				For each spring in springs, we will check if the current constraint is enabled and if the spring type matches with the
+				enabled constaint. If so, we will first get the position of two endpoint point masses of the spring, calculate the
+				direction vector, then calculate the scalar value of the force multiply by the direction vector. If the constraint type
+				is bending, we will multiply an extra 0.2 since bending constrain is the weakest one. We then apply Verlet integration
+				on each unpinned point mass to calculate the position of the point mass at t = t + dt based on last_position,
+				acceleration ], and current position.
+			</li>
+			<li>
+				Finally, we will check if the springs have any unreasonable deformation. For each spring, we will first get both
+				endpoint point masses and calculate the direction vector, midpoint of the spring, and the total deformed length. If the
+				deformed length is greater then 1.1 * rest_length, we will do some correction to the spring. If neither endpoint is
+				pinned, we will move both endpoint point masses towards the spring's midpoint by half of 1.1 * rest_length. If only one
+				point is pinned, we will apply all the correction to the unpinned side. If neither point masses is unpinned, we will
+				just skip this spring.
+			</li>
+			<li>
+				By combinnning all these parts, we will be able to stimulate the scene of a cloth hanging with 2 pinned corner.
+			</li>
+		</ol>
+		<div align="center">
+			<img src="./images/part2_ks_5000.png" width="1000px">
+			<figcaption align="middle">Pinned cloth with spring constant Ks = 5000</figcaption>
+		</div>
+		<div align="center">
+			<img src="./images/part2_ks_10000.png" width="1000px">
+			<figcaption align="middle">Pinned cloth with spring constant Ks = 10000</figcaption>
+		</div>
+		<div align="center">
+			<img src="./images/part2_ks_20000.png" width="1000px">
+			<figcaption align="middle">Pinned cloth with spring constant Ks = 20000</figcaption>
+		</div>
+		<p>
+			Changing ks will change the spring correction forces applied on each point mass. With higher ks, larger force will be
+			applied given the same deformation. Starting at low ks, after we change it to a large value, we can see the cloth
+			bounches once. With low ks, the cloth is more loose comparing with high ks
+		</p>
+		
+		<div align="center">
+			<table style="width: 1200px">
+				<tr>
+					<td align="middle">
+						<img src="images/part2_density_5.png" width="600px" />
+						<figcaption align="middle">Cloth with the density of 5</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part2_density_100.png" width="600px" />
+						<figcaption align="middle">Cloth with the density of 100</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			Changing density will let the cloth have more net gravity force. Thus, when the cloth is hanging on the wall, the cloth
+			will be pull further away from the rest position. When we change density from low to high, we can see that the cloth
+			also bounces. WIth low density, the cloth is more unstable as we see in our rendering result with some relatively
+			unclear parts.
+		</p>
+		<div align="center">
+			<table style="width: 1200px">
+				<tr>
+					<td align="middle">
+						<img src="images/part2_high_damping_1.png" width="600px" />
+						<figcaption align="middle">Cloth with high damping</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part2_high_damping_2.png" width="600px" />
+						<figcaption align="middle">Cloth with high damping</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/part2_low_damping_1.png" width="600px" />
+						<figcaption align="middle">Cloth with low damping</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part2_low_damping_2.png" width="600px" />
+						<figcaption align="middle">Cloth with low damping</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			Changing damping will change how the motion of the cloth. With higher damping value, we can see that the cloth is more
+			resistant to the forces applied on it. It will take a longer time for the cloth of reach the rest position. The cloth
+			will also be harder to reach the rest position as in normal damping value scenario. For small value, the cloth will
+			quickly reach the lowest position and the cloth will also keep swinging like silk, the overall feeling is that the cloth
+			is more soft and thin than the high damping value one.
+		</p>
+		<div align="center">
+			<img src="./images/part2_pinned4.png" width="1000px">
+			<figcaption align="middle">Cloth with all 4 corner pinned</figcaption>
+		</div>
+
+		<h2 align="middle">Part 3: Handling collisions with other objects</h2>
+		<p>
+			To implement Sphere::collide, we first get a path vector from origin of the sphere to point mass position. If the norm
+			of this vector is smaller than the radius of the sphere, the point mass collide with the sphere and we will need to move
+			the point mass out to the surface of the sphere. The tangent point is calculated using the origin plus the direction of
+			the path vector * radius. The correction vector is the difference between the tangent point and the last position of the
+			point mass. Finally, we update the position of the point mass based on the last position and correction vector position
+			= last_position + v_correct * (1.0 - friction).
+		</p>
+		<p>
+			To implement Plane::collide, we will first use both the current position and the last position of the point mass to
+			subtract the point in the plane to get two vectors. We will calculate the dot products of both vector with the plane
+			norm. The product of both dot product is non-positive, we can say that the point mass cross the plane. Thus, we will
+			move the point mass back by current_cross values, and the direction is along the plane normal. The correction vector
+			will have the opposite sign against current_cross. Finally, we update the position of the point mass based on the last
+			position and correction vector position = last_position + v_correct * (1.0 - friction).
+		</p>
+		<div align="center">
+			<img src="./images/part3_ks_500.png" width="1000px">
+			<figcaption align="middle">Cloth with all 4 corner pinned</figcaption>
+		</div>
+		<div align="center">
+			<img src="./images/part3_ks_5000.png" width="1000px">
+			<figcaption align="middle">Cloth with all 4 corner pinned</figcaption>
+		</div>
+		<div align="center">
+			<img src="./images/part3_ks_50000.png" width="1000px">
+			<figcaption align="middle">Cloth with all 4 corner pinned</figcaption>
+		</div>
+
+
+		<h2 align="middle">Part 4: Handling self-collisions</h2>
+
+		<h2 align="middle">Part 5: Shaders</h2>
+
+
+</body>
+
 </html>
