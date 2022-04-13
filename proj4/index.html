@@ -315,8 +315,81 @@
 			simulation.
 		</p>
 		<h2 align="middle">Part 5: Shaders</h2>
-
-
+		<p>
+			In this part, we implemented a GLSL shader which an be used to run independently on GPU to isolate some parts of
+			graphics pipeline to shade components. Given some texture information, for instance, a texture file, a shader will
+			output a single 4D vector that will be used to add texture to fregaments and vectors. A fragment shader will be used
+			after we get the results from a rasterizer.It will be used to calculate the color of the fragements. A vector shader
+			will be used to modify the position and the normal vector of geometric components. It will do vector and matrix
+			operations to vertices. By combining these two shaders together, we will be able to simulate different lighting and
+			material effects on obejcts.
+		</p>
+		<div align="center">
+			<img src="./images/Blinn-Phong shading.png" width="1000px">
+			<figcaption align="middle">Blinn-Phong Shading Equation</figcaption>
+		</div>
+		<p>
+			Using the Blinn-Phong shading model,we add ambient, diffuse, specular components to shade the cloth model. Each
+			component will be evaluated indepently and add to the net shadding effects, max term is used to guarantee that all the
+			components will be positive.
+		</p>
+		</div>
+		<div align="center">
+			<table style="width: 1200px">
+				<tr>
+					<td align="middle">
+						<img src="images/part5_bf.png" width="600px" />
+						<figcaption align="middle">Blinn-Phong Shading with all the components</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part5_bf_ambi.png" width="600px" />
+						<figcaption align="middle">Blinn-Phong Shading with ambient component only</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/part5_bf_dif.png" width="600px" />
+						<figcaption align="middle">Blinn-Phong Shading with diffuse component only</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part5_bf_spec.png" width="600px" />
+						<figcaption align="middle">Blinn-Phong Shading with specular component only</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div align="center">
+			<img src="./images/part5_custom.png" width="1000px">
+			<figcaption align="middle">Customized shading</figcaption>
+		</div>
+		<div align="center">
+			<table style="width: 1200px">
+				<tr>
+					<td align="middle">
+						<img src="images/part5_bf.png" width="600px" />
+						<figcaption align="middle">Blinn-Phong Shading with all the components</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part5_bf_ambi.png" width="600px" />
+						<figcaption align="middle">Blinn-Phong Shading with ambient component only</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/part5_bf_dif.png" width="600px" />
+						<figcaption align="middle">Blinn-Phong Shading with diffuse component only</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part5_bf_spec.png" width="600px" />
+						<figcaption align="middle">Blinn-Phong Shading with specular component only</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div align="center">
+			<img src="./images/part5_mirror.png" width="1000px">
+			<figcaption align="middle">Mirror Shading</figcaption>
+		</div>
 </body>
 
 </html>
