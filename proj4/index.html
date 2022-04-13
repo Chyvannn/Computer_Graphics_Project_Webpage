@@ -222,20 +222,98 @@
 		</p>
 		<div align="center">
 			<img src="./images/part3_ks_500.png" width="1000px">
-			<figcaption align="middle">Cloth with all 4 corner pinned</figcaption>
+			<figcaption align="middle">Cloth on sphere with 500 Ks</figcaption>
 		</div>
 		<div align="center">
 			<img src="./images/part3_ks_5000.png" width="1000px">
-			<figcaption align="middle">Cloth with all 4 corner pinned</figcaption>
+			<figcaption align="middle">Cloth on sphere with 5000 Ks</figcaption>
 		</div>
 		<div align="center">
 			<img src="./images/part3_ks_50000.png" width="1000px">
-			<figcaption align="middle">Cloth with all 4 corner pinned</figcaption>
+			<figcaption align="middle">Cloth on sphere with 50000 Ks</figcaption>
 		</div>
-
+		<p>
+			The low ks value will make the cloth fit the sphere better, and as the ks increases, the cloth will gradually become
+			harder to deform, the folds will be reduced, and the sides of the static position will be more warped.
+		</p>
 
 		<h2 align="middle">Part 4: Handling self-collisions</h2>
+		<p>
+			In this part, we implement the self-collision for the cloth model using spatial hashing. For each point mass, we will
+			put it into a array that is mapped from a float number in a hash map. All these point masses are located in a 3D volumn
+			box represented by the floating number they mapped from. To check if the object collide with itself, we will iterate
+			through all the point masses. For each point mass, we all also iterate through the point mass within the same 3D volumn
+			box as the original one to check if any other point mass exist within 2 * thickness distance from the original point
+			mass. If so, we will say that a self-collision at the point mass occur and the position of the point mass need to be
+			corrected. This implementation can imporve the time complexity and save a lot of loops while checking self-collision.
+		</p>
+		<div align="center">
+			<img src="./images/part4.gif" width="1000px">
+			<figcaption align="middle">Slow motion self-collision, Ks= 5000, density = 15</figcaption>
+		</div><div align="center">
+			<table style="width: 1200px">
+				<tr>
+					<td align="middle">
+						<img src="images/part4_1.png" width="600px" />
+						<figcaption align="middle">Self-collision caption 1</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part4_2.png" width="600px" />
+						<figcaption align="middle">Self-collision caption 2</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/part4_3.png" width="600px" />
+						<figcaption align="middle">Self-collision caption 3</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part4_4.png" width="600px" />
+						<figcaption align="middle">Self-collision caption 4</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td align="middle">
+						<img src="images/part4_5.png" width="600px" />
+						<figcaption align="middle">Self-collision caption 5</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part4_6.png" width="600px" />
+						<figcaption align="middle">Cloth with low damping 6</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
 
+		</div>
+		<div align="center">
+			<table style="width: 1200px">
+				<tr>
+					<td align="middle">
+						<img src="images/part4_density_100.gif" width="600px" />
+						<figcaption align="middle">Slow motion self-collision, Ks= 5000, density = 100</figcaption>
+					</td>
+					<td align="middle">
+						<img src="images/part4_ks_100.gif" width="600px" />
+						<figcaption align="middle">Slow motion self-collision, Ks= 100, density = 15</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<p>
+			Similar to what we have in part 3, we can see that if the density of the cloth is small, the cloth will have a more
+			detailed simulation effect when the cloth is falling onto itself. As density becomes larger, the bottom portion of the
+			cloth will have more fine folds. When the density is small, there is only a small number of point mass for the object
+			per unit volumn , a lot of detailed folds and movements will be ignored as low density point mass cannot include all the
+			complex effects between multiple point masses. However, as density grows, we will be able to get enough point mass to
+			simulate more complicate physical effects.
+		</p>
+		<p>
+			In addition, for the changes related to the spring constant, when the constant is small, we will also be able to see
+			more detailed folds since only apply a small amount of force will be able to cause a greate deforms to the cloth. As
+			spring constant is getting larger, the cloth will getting harder to be deformed and a lot of folds will disappear in the
+			simulation.
+		</p>
 		<h2 align="middle">Part 5: Shaders</h2>
 
 
